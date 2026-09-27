@@ -1,9 +1,29 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from ..services.artifact_service import get_model_path, get_model_metadata_path
+from ..services.artifact_service import (
+    get_model_metadata_path,
+    get_model_path,
+    load_model_metadata,
+)
 
 router = APIRouter(prefix="/models", tags=["models"])
+
+
+@router.get("/{model_id}")
+def get_model(model_id: str) -> dict:
+    try:
+        return load_model_metadata(model_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Geçersiz model kimliği"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Model raporu bulunamadı"
+        )
 
 
 @router.get("/{model_id}/download", response_class=FileResponse)

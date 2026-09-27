@@ -3,7 +3,11 @@ from io import BytesIO
 
 import pandas as pd
 
-from ..services.dataset_service import summarize_dataset, save_dataset
+from ..services.dataset_service import (
+    load_dataset,
+    save_dataset,
+    summarize_dataset,
+)
 
 router = APIRouter(
     prefix="/datasets",
@@ -71,4 +75,25 @@ async def upload_dataset(file: UploadFile):
         "size": total_size,
         "summary": summarize_dataset(df),
         "dataset_id": dataset_id,
+    }
+
+
+@router.get("/{dataset_id}")
+def get_dataset(dataset_id: str) -> dict:
+    try:
+        df = load_dataset(dataset_id)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Veri seti bulunamadı."
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        )
+
+    return {
+        "dataset_id": dataset_id,
+        "summary": summarize_dataset(df, preview_rows=20),
     }

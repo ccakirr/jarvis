@@ -6,6 +6,7 @@ from smolagents import Tool
 
 from ...services.training_service import train_model
 from ...services.dataset_service import load_dataset
+from ...services.session_service import add_session_model
 from ...core.config import MODELS_DIR, METADATA_DIR
 
 
@@ -89,6 +90,10 @@ class TrainingTool(Tool):
 
     output_type = "object"
 
+    def __init__(self, session_id: str):
+        super().__init__()
+        self.session_id = session_id
+
     def forward(
         self,
         dataset_id: str,
@@ -139,5 +144,6 @@ class TrainingTool(Tool):
             json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False),
             encoding="utf-8",
         )
+        add_session_model(self.session_id, model_id)
 
         return result

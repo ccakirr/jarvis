@@ -16,9 +16,9 @@ def create_agent(session_id: str):
         tools=[
             InspectDatasetTool(),
             AggregateDatasetTool(),
-            TransformDatasetTool(),
+            TransformDatasetTool(session_id),
             SelectDatasetTool(session_id),
-            TrainingTool()
+            TrainingTool(session_id)
         ],
         model=model,
         instructions=AGENT_INSTRUCTIONS,

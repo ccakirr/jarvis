@@ -2,6 +2,7 @@ from smolagents import Tool
 
 from ...services.dataset_service import load_dataset, save_dataframe
 from ...services.preprocessing_service import transform_dataset
+from ...services.session_service import add_session_dataset
 
 
 class TransformDatasetTool(Tool):
@@ -57,6 +58,10 @@ class TransformDatasetTool(Tool):
 
     output_type = "object"
 
+    def __init__(self, session_id: str):
+        super().__init__()
+        self.session_id = session_id
+
     def forward(self, dataset_id: str, operations: list[dict]) -> dict:
         if not operations:
             raise ValueError("En az bir dönüşüm işlemi belirtilmeli.")
@@ -72,6 +77,12 @@ class TransformDatasetTool(Tool):
             )
 
         new_dataset_id = save_dataframe(transformed_df)
+        add_session_dataset(
+            self.session_id,
+            new_dataset_id,
+            source_dataset_id=dataset_id,
+            operations=operations,
+        )
 
         return {
             "source_dataset_id": dataset_id,

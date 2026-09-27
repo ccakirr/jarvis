@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -30,3 +31,9 @@ def get_model_metadata_path(model_id: str) -> Path:
         raise FileNotFoundError(f"Metadata dosyası bulunamadı: {model_id}")
 
     return file_path
+
+
+def load_model_metadata(model_id: str) -> dict:
+    file_path = get_model_metadata_path(model_id)
+
+    return json.loads(file_path.read_text(encoding="utf-8"))

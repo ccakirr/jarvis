@@ -36,9 +36,9 @@ def load_dataset(dataset_id: str) -> pd.DataFrame:
         ) from exc
 
 
-def summarize_dataset(df: pd.DataFrame) -> dict:
+def summarize_dataset(df: pd.DataFrame, preview_rows: int = 5) -> dict:
     preview = json.loads(
-        df.head(5).to_json(
+        df.head(preview_rows).to_json(
             orient="records",
             date_format="iso"
         )

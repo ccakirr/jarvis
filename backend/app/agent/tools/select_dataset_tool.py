@@ -29,4 +29,9 @@ class SelectDatasetTool(Tool):
         self.session_id = session_id
 
     def forward(self, dataset_id: str) -> dict:
-        return set_active_dataset(self.session_id, dataset_id)
+        session = set_active_dataset(self.session_id, dataset_id)
+
+        return {
+            "session_id": session["session_id"],
+            "active_dataset_id": session["active_dataset_id"],
+        }
