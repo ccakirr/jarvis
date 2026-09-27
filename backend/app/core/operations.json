@@ -1,0 +1,11 @@
+{
+  "mean": {"default": true, "requires_numeric": true},
+  "sum": {"default": true, "requires_numeric": true},
+  "count": {"default": true, "requires_numeric": false},
+  "median": {"default": false, "requires_numeric": true},
+  "min": {"default": false, "requires_numeric": true},
+  "max": {"default": false, "requires_numeric": true},
+  "std": {"default": false, "requires_numeric": true},
+  "var": {"default": false, "requires_numeric": true},
+  "nunique": {"default": false, "requires_numeric": false}
+}

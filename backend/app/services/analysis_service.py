@@ -1,27 +1,33 @@
 import pandas as pd
 import numpy as np
 
-OPERATIONS = {
-    "mean": {
-        "calculate": lambda grouped: grouped.mean(),
-        "requires_numeric": True,
-    },
-    "sum": {
-        "calculate": lambda grouped: grouped.sum(min_count=1),
-        "requires_numeric": True,
-    },
-    "count": {
-        "calculate": lambda grouped: grouped.count(),
-        "requires_numeric": False,
-    },
-}
+import json
+from pathlib import Path
+
+OPERATIONS = json.loads(
+    (Path(__file__).resolve().parents[1] / "core" / "operations.json")
+    .read_text()
+)
+
+
+def get_operation_catalog() -> dict:
+    return {
+        "defaults": [
+            name for name, config in OPERATIONS.items() if config["default"]
+        ],
+        "available": [
+            {"name": name, **config} for name, config in OPERATIONS.items()
+        ],
+    }
 
 
 def to_python_scalar(value):
     if pd.isna(value):
         return None
     if isinstance(value, np.generic):
-        return value.item()
+        value = value.item()
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
     return value
 
 
@@ -58,8 +64,11 @@ def aggregate_dataset(
         )
 
     grouped = df.groupby(group_by, dropna=False)[column]
-    result = operation_config["calculate"](grouped)
-
+    result = (
+        grouped.sum(min_count=1)
+        if operation == "sum"
+        else grouped.agg(operation)
+    )
     results = []
 
     for group, value in result.items():
@@ -74,3 +83,17 @@ def aggregate_dataset(
         "operation": operation,
         "results": results,
     }
+
+
+def aggregate_operations(
+    df: pd.DataFrame,
+    group_by: str,
+    operations: list[dict],
+) -> list[dict]:
+    """
+        Apply the requested aggregations without changing data or the catalog.
+    """
+    return [
+        aggregate_dataset(df, group_by, item["column"], item["operation"])
+        for item in operations
+    ]

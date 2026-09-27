@@ -1,11 +1,11 @@
-from .agent import create_agent
+from ..services.session_service import create_session
+from ..services.chat_service import send_message
 
-
-agent = create_agent()
+session = create_session()
 
 
 def run_agent(prompt: str):
-    response = agent.run(task=prompt, reset=False)
+    response = send_message(session["session_id"], prompt)
     print(response)
 
 

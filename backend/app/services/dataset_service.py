@@ -68,3 +68,8 @@ def save_dataset(content: bytes) -> str:
     file_path.write_bytes(content)
 
     return dataset_id
+
+
+def save_dataframe(df: pd.DataFrame) -> str:
+    content = df.to_csv(index=False).encode("utf-8")
+    return save_dataset(content)

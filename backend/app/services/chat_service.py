@@ -8,7 +8,7 @@ def get_session_agent(session_id: str):
     get_session(session_id)
 
     if session_id not in agents:
-        agents[session_id] = create_agent()
+        agents[session_id] = create_agent(session_id)
 
     return agents[session_id]
 
