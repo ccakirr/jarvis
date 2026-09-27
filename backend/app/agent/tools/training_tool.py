@@ -131,6 +131,8 @@ class TrainingTool(Tool):
             "model_name": model_name,
             "task_type": task_type,
             "report": report,
+            "model_download_url": f"/api/models/{model_id}/download",
+            "report_download_url": f"/api/models/{model_id}/report/download",
         }
 
         metadata_path.write_text(

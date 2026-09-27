@@ -60,6 +60,45 @@ catalog = {
 }
 
 
+def validate_model_params(params: dict | None) -> dict:
+    if params is None:
+        return {}
+
+    if not isinstance(params, dict):
+        raise ValueError(
+            "Parametreler bir sözlük olmalı."
+        )
+
+    if "n_jobs" in params:
+        raise ValueError(
+            "n_jobs backend tarafından yönetilir."
+        )
+
+    if "n_estimators" in params:
+        value = params["n_estimators"]
+        if type(value) is not int or not 1 <= value <= 500:
+            raise ValueError(
+                "n_estimators, 1–500 arasında tam sayı olmalı."
+            )
+
+    if "max_iter" in params:
+        value = params["max_iter"]
+        if type(value) is not int or not 1 <= value <= 2000:
+            raise ValueError(
+                "max_iter, 1–2000 arasında tam sayı olmalı."
+            )
+
+    if "max_depth" in params:
+        value = params["max_depth"]
+        if value is not None:
+            if type(value) is not int or not 1 <= value <= 50:
+                raise ValueError(
+                    "max_depth, None veya 1–50 arasında tam sayı olmalı."
+                )
+
+    return params.copy()
+
+
 def create_model(
     task_type: str,
     model_name: str,
@@ -83,7 +122,7 @@ def create_model(
     model_class = config["class"]
     approved_params = signature(model_class).parameters
 
-    params = params or {}
+    params = validate_model_params(params)
 
     invalid_params = set(params) - set(approved_params)
 
