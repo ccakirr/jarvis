@@ -32,6 +32,8 @@ joblib==1.6.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 litellm==1.102.1
+livekit-api==1.2.1
+livekit-protocol==1.1.27
 markdown-it-py==4.2.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
@@ -43,10 +45,12 @@ packaging==26.3
 pandas==3.0.6
 pillow==12.3.0
 propcache==0.5.4
+protobuf==7.36.2
 pydantic==2.13.5
 pydantic-settings==2.15.0
 pydantic_core==2.46.5
 Pygments==2.21.0
+PyJWT==2.15.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
 python-multipart==0.0.32
@@ -67,6 +71,7 @@ threadpoolctl==3.7.0
 tiktoken==0.14.0
 tokenizers==0.23.2
 tqdm==4.70.1
+types-protobuf==7.35.1.20260906
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 urllib3==2.8.0

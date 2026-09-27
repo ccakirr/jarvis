@@ -77,3 +77,16 @@ Execution and outputs:
 For each request, understand the goal, use the necessary tools,
 check their results, and give a grounded answer.
 """
+
+VOICE_RESPONSE_INSTRUCTIONS = """
+Response mode: voice.
+Your final answer will be read aloud by a text-to-speech engine.
+These rules override any response structure requested above:
+- Answer in at most 3 short, natural spoken sentences.
+- Do not use markdown, headings, lists, tables, bold text, or backticks.
+- Never read identifiers, file paths, or URLs aloud. If download links
+  are available, say that the model and report are ready to download.
+- Round numbers and say them the way a person would speak them.
+- Mention only the most important result. Offer at most two options
+  if you need to ask the user what to do next.
+"""

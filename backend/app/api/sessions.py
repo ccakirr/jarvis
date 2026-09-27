@@ -17,6 +17,17 @@ def create_session_endpoint() -> dict:
     return create_session()
 
 
+@router.get("/{session_id}")
+def get_session_endpoint(session_id: str) -> dict:
+    try:
+        return get_session(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=404,
+            detail="Oturum bulunamadı"
+        )
+
+
 @router.put("/{session_id}/dataset")
 def set_active_dataset_endpoint(
     session_id: str,
@@ -67,7 +78,7 @@ def send_message_endpoint(
             detail="Lütfen geçerli bir mesaj giriniz"
         )
 
-    answer = send_message(session_id, message)
+    answer = send_message(session_id, message, body.mode)
     return {
         "session_id": session_id,
         "answer": answer,

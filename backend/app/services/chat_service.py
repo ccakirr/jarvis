@@ -1,4 +1,5 @@
 from ..agent.agent import create_agent
+from ..agent.prompts import VOICE_RESPONSE_INSTRUCTIONS
 from .session_service import get_session
 
 agents = {}
@@ -13,7 +14,7 @@ def get_session_agent(session_id: str):
     return agents[session_id]
 
 
-def send_message(session_id: str, message: str) -> str:
+def send_message(session_id: str, message: str, mode: str = "text") -> str:
     message = message.strip()
     if not message:
         raise ValueError("Geçerli bir mesaj giriniz")
@@ -28,7 +29,11 @@ def send_message(session_id: str, message: str) -> str:
         "It replaces any previous active dataset selection. "
         "If it is None and the request requires a dataset, ask the user "
         "to select one. Do not read dataset IDs aloud.\n\n"
-        f"User message:\n{message}"
     )
+
+    if mode == "voice":
+        task += VOICE_RESPONSE_INSTRUCTIONS + "\n"
+
+    task += f"User message:\n{message}"
 
     return agent.run(task, reset=False)

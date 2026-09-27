@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -7,3 +9,4 @@ class SetActiveDatasetRequest(BaseModel):
 
 class SendMessageRequest(BaseModel):
     message: str
+    mode: Literal["text", "voice"] = "text"

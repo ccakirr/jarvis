@@ -5,6 +5,7 @@ from .api.health import router as health_router
 from .api.datasets import router as datasets_router
 from .api.sessions import router as sessions_router
 from .api.models import router as models_router
+from .api.voice import router as voice_router
 
 
 app = FastAPI(
@@ -35,5 +36,10 @@ app.include_router(
 
 app.include_router(
     models_router,
+    prefix="/api"
+)
+
+app.include_router(
+    voice_router,
     prefix="/api"
 )
