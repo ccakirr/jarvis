@@ -79,6 +79,7 @@ const OPERATION_LABELS: Record<string, string> = {
   filter_rows: "Filtrelendi",
   select_columns: "Sütunlar seçildi",
   time_series_features: "Zaman serisi özellikleri",
+  derive_features: "Özellikler türetildi",
 };
 
 const OPERATOR_SYMBOLS: Record<string, string> = {
@@ -98,6 +99,70 @@ function outputColumn(op: TransformOperation): string {
   return typeof value === "string" ? value : "sütun";
 }
 
+const FUTURE_PREFIXES = ["target_", "future_"];
+
+export function isLabelColumn(name: string): boolean {
+  return FUTURE_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
+const INFIX_SYMBOLS: Record<string, string> = {
+  add: "+",
+  sub: "−",
+  mul: "×",
+  div: "÷",
+  gt: ">",
+  ge: "≥",
+  lt: "<",
+  le: "≤",
+  eq: "=",
+  ne: "≠",
+  and: "ve",
+  or: "veya",
+};
+
+type ExpressionNode = { column?: unknown; value?: unknown; op?: string; args?: ExpressionNode[]; [key: string]: unknown };
+
+export function formatExpression(node: ExpressionNode, nested = false): string {
+  if (node.column !== undefined) return String(node.column);
+  if (node.value !== undefined) return typeof node.value === "string" ? `"${node.value}"` : String(node.value);
+
+  const op = String(node.op);
+  const args = node.args ?? [];
+  const arg = (index: number) => (args[index] ? formatExpression(args[index]) : "?");
+
+  if (op in INFIX_SYMBOLS && args.length === 2) {
+    const text = `${formatExpression(args[0], true)} ${INFIX_SYMBOLS[op]} ${formatExpression(args[1], true)}`;
+    return nested ? `(${text})` : text;
+  }
+  switch (op) {
+    case "neg":
+      return `−${formatExpression(args[0], true)}`;
+    case "not":
+      return `değil(${arg(0)})`;
+    case "where":
+      return `eğer(${arg(0)}, ${arg(1)}, ${arg(2)})`;
+    case "shift":
+    case "diff":
+    case "pct_change":
+      return `${op}(${arg(0)}, ${String(node.periods)})`;
+    case "rolling":
+      return `rolling_${String(node.stat)}(${arg(0)}, ${String(node.window)})`;
+    case "ewm":
+      return `ewm(${arg(0)}, ${String(node.span)})`;
+    default:
+      return `${op}(${args.map((child) => formatExpression(child)).join(", ")})`;
+  }
+}
+
+/** derive_features tek işlemde birden çok sütun üretir; her sütun ayrı adım olarak gösterilir */
+export function expandOperations(operations: TransformOperation[]): TransformOperation[] {
+  return operations.flatMap((op) => {
+    const features = op.params?.features;
+    if (op.operation !== "derive_features" || !Array.isArray(features)) return [op];
+    return features.map((feature) => ({ operation: "derived_feature", params: feature as Record<string, unknown> }));
+  });
+}
+
 export function describeOperations(operations: TransformOperation[]): string {
   const parts: string[] = [];
   let previous = "";
@@ -108,10 +173,13 @@ export function describeOperations(operations: TransformOperation[]): string {
   };
 
   for (const op of operations) {
+    const features = op.params?.features;
     const label =
       op.operation === "derive_column"
         ? `+ ${outputColumn(op)}`
-        : (OPERATION_LABELS[op.operation] ?? op.operation);
+        : op.operation === "derive_features" && Array.isArray(features)
+          ? `${features.length} özellik türetildi`
+          : (OPERATION_LABELS[op.operation] ?? op.operation);
     if (label === previous) {
       count += 1;
     } else {
@@ -160,6 +228,13 @@ export function describeOperationStep(op: TransformOperation): { title: string; 
         title: "Sütun seçimi",
         detail: Array.isArray(params.columns) ? params.columns.join(", ") : JSON.stringify(params.columns),
       };
+    case "derived_feature": {
+      const name = String(params.name);
+      return {
+        title: isLabelColumn(name) ? `${name} · hedef (gelecek)` : name,
+        detail: `= ${formatExpression((params.expression ?? {}) as ExpressionNode)}`,
+      };
+    }
     case "time_series_features":
       return {
         title: "Zaman serisi özellikleri",

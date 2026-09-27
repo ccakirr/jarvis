@@ -4,12 +4,14 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 
 from .model_service import create_model
+from .timeseries_service import FUTURE_PREFIXES
 from .training_service import build_preprocessor, build_training_pipeline
 
 STRATEGIES = ("long_short", "long_only")
 MIN_TRAIN_ROWS = 200
 MIN_TEST_PERIODS = 20
 MAX_COST_BPS = 100
+MAX_PROBABILITY_THRESHOLD = 0.95
 EQUITY_POINTS = 160
 
 
@@ -23,6 +25,7 @@ def validate_backtest_inputs(
     test_size: float,
     cost_bps: float,
     strategy: str,
+    probability_threshold: float,
 ) -> None:
     for column in (time_column, target_column, return_column):
         if column not in df.columns:
@@ -33,7 +36,10 @@ def validate_backtest_inputs(
     if len(set(feature_columns)) != len(feature_columns):
         raise ValueError("feature_columns tekrar eden sütun içeremez.")
 
-    forbidden = {time_column, target_column, return_column} & set(feature_columns)
+    forbidden = (
+        {time_column, target_column, return_column}
+        | {column for column in feature_columns if column.startswith(FUTURE_PREFIXES)}
+    ) & set(feature_columns)
     if forbidden:
         raise ValueError(
             "Hedef, getiri ve zaman sütunları özellik olamaz; gelecek bilgisi "
@@ -58,6 +64,14 @@ def validate_backtest_inputs(
         raise ValueError("test_size 0 ile 1 arasında olmalı.")
     if isinstance(cost_bps, bool) or not isinstance(cost_bps, (int, float)) or not 0 <= cost_bps <= MAX_COST_BPS:
         raise ValueError(f"cost_bps 0 ile {MAX_COST_BPS} arasında olmalı.")
+    if (
+        isinstance(probability_threshold, bool)
+        or not isinstance(probability_threshold, (int, float))
+        or not 0.5 <= probability_threshold <= MAX_PROBABILITY_THRESHOLD
+    ):
+        raise ValueError(
+            f"probability_threshold 0.5 ile {MAX_PROBABILITY_THRESHOLD} arasında olmalı."
+        )
     if strategy not in STRATEGIES:
         raise ValueError(
             f"Desteklenmeyen strateji: {strategy}. "
@@ -89,9 +103,11 @@ def chronological_split(
     return train, test
 
 
-def strategy_positions(predictions: np.ndarray, strategy: str) -> np.ndarray:
-    short_position = -1.0 if strategy == "long_short" else 0.0
-    return np.where(predictions == 1, 1.0, short_position)
+def strategy_positions(up_probability: np.ndarray, strategy: str, threshold: float) -> np.ndarray:
+    positions = np.where(up_probability >= threshold, 1.0, 0.0)
+    if strategy == "long_short":
+        positions = np.where(up_probability <= 1 - threshold, -1.0, positions)
+    return positions
 
 
 def downsample_curve(times: pd.Series, *series: np.ndarray) -> list[dict]:
@@ -114,6 +130,7 @@ def run_backtest(
     horizon: int,
     cost_bps: float,
     strategy: str,
+    probability_threshold: float,
 ) -> dict:
     periods = test.iloc[::horizon]
     period_positions = positions[::horizon]
@@ -141,6 +158,7 @@ def run_backtest(
 
     return {
         "strategy": strategy,
+        "probability_threshold": probability_threshold,
         "cost_bps": cost_bps,
         "horizon": horizon,
         "periods": int(len(net)),
@@ -168,10 +186,12 @@ def train_direction_model(
     test_size: float = 0.3,
     cost_bps: float = 1.0,
     strategy: str = "long_short",
+    probability_threshold: float = 0.5,
 ) -> tuple[Pipeline, dict]:
     validate_backtest_inputs(
         df, time_column, target_column, return_column,
         feature_columns, horizon, test_size, cost_bps, strategy,
+        probability_threshold,
     )
 
     times = pd.to_datetime(df[time_column], errors="coerce", utc=True)
@@ -200,6 +220,7 @@ def train_direction_model(
     predictions = pipeline.predict(test[feature_columns])
     y_test = test[target_column]
     labels = pipeline.named_steps["model"].classes_.tolist()
+    up_probability = pipeline.predict_proba(test[feature_columns])[:, labels.index(1)]
     up_share = float(y_test.mean())
 
     report = {
@@ -233,10 +254,11 @@ def train_direction_model(
             test,
             time_column,
             return_column,
-            strategy_positions(predictions, strategy),
+            strategy_positions(up_probability, strategy, probability_threshold),
             horizon,
             cost_bps,
             strategy,
+            probability_threshold,
         ),
     }
 

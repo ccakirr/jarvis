@@ -24,6 +24,7 @@ import {
   cx,
   datasetLabel,
   describeOperationStep,
+  expandOperations,
   findDataset,
   formatCell,
   formatInteger,
@@ -240,7 +241,7 @@ function DatasetBody({
       {operations.length > 0 && (
         <Section title="Dönüşüm adımları">
           <ol className="steps">
-            {operations.map((op, index) => {
+            {expandOperations(operations).map((op, index) => {
               const step = describeOperationStep(op);
               return (
                 <li key={index} className="step">
@@ -605,8 +606,11 @@ function BacktestSection({ backtest }: { backtest: NonNullable<ModelReport["repo
 
       <p className="muted-note backtest-note">
         {STRATEGY_LABELS[backtest.strategy] ?? backtest.strategy} · işlem başına {formatNumber(backtest.cost_bps)} bps
-        maliyet · her {backtest.horizon} barda bir karar. Geçmiş veride yapılmış bir testtir; gelecekteki kârı
-        garanti etmez.
+        maliyet · her {backtest.horizon} barda bir karar
+        {backtest.probability_threshold && backtest.probability_threshold > 0.5
+          ? ` · güven eşiği ${formatNumber(backtest.probability_threshold)} (altında işleme girilmez)`
+          : ""}
+        . Geçmiş veride yapılmış bir testtir; gelecekteki kârı garanti etmez.
       </p>
     </Section>
   );

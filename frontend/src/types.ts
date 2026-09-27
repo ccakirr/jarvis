@@ -34,6 +34,7 @@ export interface EquityPoint {
 
 export interface Backtest {
   strategy: "long_short" | "long_only";
+  probability_threshold?: number;
   cost_bps: number;
   horizon: number;
   periods: number;

@@ -17,7 +17,9 @@ class DirectionModelTool(Tool):
         "against the majority-class baseline, then simulates one "
         "non-overlapping trade every <horizon> bars with costs: total and "
         "gross return, buy-and-hold return, annualized Sharpe, max drawdown "
-        "and hit rate. Use this, not train_model, for time-ordered data; "
+        "and hit rate. With probability_threshold above 0.5 it trades only "
+        "when the model is confident and stays flat otherwise, which cuts "
+        "trades and costs. Use this, not train_model, for time-ordered data; "
         "train_model shuffles rows and leaks future information. Present the "
         "result as a historical out-of-sample test, never as expected future "
         "profit; short test periods make Sharpe noisy."
@@ -90,6 +92,14 @@ class DirectionModelTool(Tool):
                 "(commission plus slippage/spread). Defaults to 1.0."
             ),
         },
+        "probability_threshold": {
+            "type": "number",
+            "nullable": True,
+            "description": (
+                "Minimum predicted probability to open a trade, between 0.5 "
+                "and 0.95. Defaults to 0.5 (always in the market)."
+            ),
+        },
         "strategy": {
             "type": "string",
             "nullable": True,
@@ -119,6 +129,7 @@ class DirectionModelTool(Tool):
         test_size: float | None = None,
         cost_bps: float | None = None,
         strategy: str | None = None,
+        probability_threshold: float | None = None,
     ) -> dict:
         model_name = model_name or "logistic_regression"
 
@@ -135,6 +146,7 @@ class DirectionModelTool(Tool):
             0.3 if test_size is None else test_size,
             1.0 if cost_bps is None else cost_bps,
             strategy or "long_short",
+            0.5 if probability_threshold is None else probability_threshold,
         )
 
         result = save_model_artifacts(pipeline, {

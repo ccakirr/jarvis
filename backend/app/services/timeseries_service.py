@@ -6,6 +6,7 @@ ROLLING_WINDOWS = (12, 48)
 RSI_PERIOD = 14
 MAX_HORIZON = 500
 MIN_ROWS = 200
+FUTURE_PREFIXES = ("target_", "future_")
 
 
 def require_numeric_column(df: pd.DataFrame, column: str) -> pd.Series:
