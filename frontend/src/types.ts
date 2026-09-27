@@ -26,6 +26,28 @@ export interface DatasetSummary {
   preview: Record<string, unknown>[];
 }
 
+export interface EquityPoint {
+  time: string;
+  strategy: number;
+  buy_hold: number;
+}
+
+export interface Backtest {
+  strategy: "long_short" | "long_only";
+  cost_bps: number;
+  horizon: number;
+  periods: number;
+  trades: number;
+  exposure: number;
+  hit_rate: number;
+  total_return: number;
+  gross_return: number;
+  buy_hold_return: number;
+  sharpe: number;
+  max_drawdown: number;
+  equity_curve: EquityPoint[];
+}
+
 export interface ModelReport {
   model_id: string;
   dataset_id: string;
@@ -41,7 +63,15 @@ export interface ModelReport {
     target_column: string;
     feature_columns: string[];
     test_size: number;
-    random_state: number;
+    random_state?: number;
+    // Yalnızca zaman serisi (train_direction_model) modellerinde
+    split?: "chronological";
+    horizon?: number;
+    purged_rows?: number;
+    return_column?: string;
+    train_period?: { start: string; end: string };
+    test_period?: { start: string; end: string };
+    backtest?: Backtest;
     // Yalnızca NLP (train_text_classifier) modellerinde
     text_column?: string;
     rows_dropped_empty_text?: number;

@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useEffect, type CSSProperties, type ReactNode } from "react";
 
+import { EquityChart } from "./EquityChart";
+
 import {
   COLUMN_KIND_LABELS,
   columnKind,
@@ -25,6 +27,9 @@ import {
   formatInteger,
   formatMetric,
   formatNumber,
+  formatPercent,
+  formatShortDate,
+  formatSignedPercent,
   lineageOf,
   metricViews,
   modelLabel,
@@ -368,6 +373,8 @@ function ModelView({
         ))}
       </div>
 
+      {report.backtest && <BacktestSection backtest={report.backtest} />}
+
       {report.top_terms && report.top_terms.length > 0 && (
         <Section
           title="Belirleyici kelimeler"
@@ -401,6 +408,32 @@ function ModelView({
         </Section>
       )}
 
+      {report.split === "chronological" && report.train_period && report.test_period ? (
+        <Section title="Zamana göre bölünme">
+          <div className="split-bar" role="img" aria-label={`${report.train_rows} eğitim, ${report.test_rows} test satırı`}>
+            <span className="split-bar__train" style={{ "--ratio": report.train_rows / total } as CSSProperties} />
+            <span className="split-bar__dropped" style={{ "--ratio": (report.purged_rows ?? 0) / total } as CSSProperties} />
+            <span className="split-bar__test" style={{ "--ratio": report.test_rows / total } as CSSProperties} />
+          </div>
+          <ul className="split-legend">
+            <li>
+              <i className="dot dot--train" /> {formatInteger(report.train_rows)} eğitim ·{" "}
+              {formatShortDate(report.train_period.start)} – {formatShortDate(report.train_period.end)}
+            </li>
+            <li>
+              <i className="dot dot--dropped" /> {formatInteger(report.purged_rows ?? 0)} purge
+            </li>
+            <li>
+              <i className="dot dot--test" /> {formatInteger(report.test_rows)} test ·{" "}
+              {formatShortDate(report.test_period.start)} – {formatShortDate(report.test_period.end)}
+            </li>
+          </ul>
+          <p className="muted-note">
+            Karıştırma yok: model geçmişte eğitildi, sonraki dönemde test edildi. Eğitimin son {report.purged_rows}{" "}
+            satırı, etiketleri test dönemine taştığı için atıldı.
+          </p>
+        </Section>
+      ) : (
       <Section title="Veri bölünmesi">
         <div className="split-bar" role="img" aria-label={`${report.train_rows} eğitim, ${report.test_rows} test satırı`}>
           <span className="split-bar__train" style={{ "--ratio": report.train_rows / total } as CSSProperties} />
@@ -430,6 +463,7 @@ function ModelView({
           test_size {report.test_size} · random_state {report.random_state}
         </p>
       </Section>
+      )}
 
       <Section title="Hedef ve özellikler">
         <div className="feature-block">
@@ -507,3 +541,49 @@ function ConfusionMatrix({ labels, matrix }: { labels: string[]; matrix: number[
     </div>
   );
 }
+
+const STRATEGY_LABELS: Record<string, string> = {
+  long_short: "Al-sat (yükseliş → al, düşüş → açığa sat)",
+  long_only: "Sadece al (yükseliş → al, düşüş → nakitte bekle)",
+};
+
+function Kpi({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "good" | "poor" }) {
+  return (
+    <div className={cx("metric", tone && `is-${tone}`)}>
+      <span className="metric__label">{label}</span>
+      <span className="metric__value">{value}</span>
+      {hint && <span className="metric__hint">{hint}</span>}
+    </div>
+  );
+}
+
+function BacktestSection({ backtest }: { backtest: NonNullable<ModelReport["report"]["backtest"]> }) {
+  const costImpact = backtest.total_return - backtest.gross_return;
+
+  return (
+    <Section title="Backtest" aside={<span className="muted-note">test dönemi</span>}>
+      <div className="metric-grid metric-grid--compact">
+        <Kpi
+          label="Net getiri"
+          value={formatSignedPercent(backtest.total_return)}
+          hint="maliyet dahil"
+          tone={backtest.total_return > 0 ? "good" : "poor"}
+        />
+        <Kpi label="Al-tut" value={formatSignedPercent(backtest.buy_hold_return)} hint="aynı dönem" />
+        <Kpi label="Brüt getiri" value={formatSignedPercent(backtest.gross_return)} hint={`maliyet etkisi ${formatSignedPercent(costImpact)}`} />
+        <Kpi label="Sharpe" value={formatNumber(Number(backtest.sharpe.toFixed(2)))} hint="yıllık · kısa dönemde oynak" />
+        <Kpi label="Maks. düşüş" value={formatSignedPercent(backtest.max_drawdown)} hint="zirveden en derin kayıp" />
+        <Kpi label="İsabet" value={formatPercent(backtest.hit_rate)} hint={`${backtest.trades} işlem · ${backtest.periods} dönem`} />
+      </div>
+
+      <EquityChart points={backtest.equity_curve} />
+
+      <p className="muted-note backtest-note">
+        {STRATEGY_LABELS[backtest.strategy] ?? backtest.strategy} · işlem başına {formatNumber(backtest.cost_bps)} bps
+        maliyet · her {backtest.horizon} barda bir karar. Geçmiş veride yapılmış bir testtir; gelecekteki kârı
+        garanti etmez.
+      </p>
+    </Section>
+  );
+}
+

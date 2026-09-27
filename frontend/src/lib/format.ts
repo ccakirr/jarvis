@@ -27,6 +27,39 @@ export function formatMetric(value: number): string {
   return Math.abs(value) >= 10_000 ? metricCompactFormat.format(value) : formatNumber(value);
 }
 
+const signedPercentFormat = new Intl.NumberFormat("tr-TR", {
+  style: "percent",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  signDisplay: "exceptZero",
+});
+const shortDateFormat = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", timeZone: "UTC" });
+const dateTimeFormat = new Intl.DateTimeFormat("tr-TR", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
+const plainPercentFormat = new Intl.NumberFormat("tr-TR", { style: "percent", maximumFractionDigits: 1 });
+
+export function formatPercent(value: number): string {
+  return plainPercentFormat.format(value);
+}
+
+export function formatSignedPercent(value: number): string {
+  return signedPercentFormat.format(value);
+}
+
+export function formatShortDate(iso: string): string {
+  return shortDateFormat.format(new Date(iso));
+}
+
+export function formatDateTime(iso: string): string {
+  return dateTimeFormat.format(new Date(iso));
+}
+
 export function formatInteger(value: number): string {
   return new Intl.NumberFormat("tr-TR").format(value);
 }
@@ -45,6 +78,7 @@ const OPERATION_LABELS: Record<string, string> = {
   drop_empty_rows: "Boş satırlar silindi",
   filter_rows: "Filtrelendi",
   select_columns: "Sütunlar seçildi",
+  time_series_features: "Zaman serisi özellikleri",
 };
 
 const OPERATOR_SYMBOLS: Record<string, string> = {
@@ -125,6 +159,11 @@ export function describeOperationStep(op: TransformOperation): { title: string; 
       return {
         title: "Sütun seçimi",
         detail: Array.isArray(params.columns) ? params.columns.join(", ") : JSON.stringify(params.columns),
+      };
+    case "time_series_features":
+      return {
+        title: "Zaman serisi özellikleri",
+        detail: `${String(params.price_column)} · ufuk ${String(params.horizon)} bar · geçmişe dayalı göstergeler + gelecek etiketi`,
       };
     case "drop_duplicates":
       return { title: "Tekrarlı satırları silme", detail: "Birebir aynı satırlar kaldırıldı" };
@@ -227,6 +266,7 @@ export function modelLabel(modelName: string): string {
 }
 
 export function taskLabel(model: ModelReport): string {
+  if (model.report.backtest) return "Yön tahmini + backtest";
   if (model.report.text_column) return "Metin sınıflandırma (NLP)";
   return model.task_type === "classification" ? "Sınıflandırma" : "Regresyon";
 }
@@ -278,14 +318,15 @@ export function metricViews(report: ModelReport): MetricView[] {
   } else {
     const accuracy = numericMetric(metrics, "accuracy");
     const f1 = numericMetric(metrics, "f1");
+    const baseline = numericMetric(metrics, "baseline_accuracy");
     if (accuracy !== undefined) {
       views.push({
         key: "accuracy",
         label: "Doğruluk",
         value: accuracy,
-        quality: scoreQuality(accuracy),
+        quality: baseline === undefined ? scoreQuality(accuracy) : accuracy > baseline ? "fair" : "poor",
         gauge: accuracy,
-        hint: "Doğru tahmin oranı",
+        hint: baseline === undefined ? "Doğru tahmin oranı" : `Naif taban ${formatNumber(baseline)}`,
       });
     }
     if (f1 !== undefined) {
@@ -296,6 +337,15 @@ export function metricViews(report: ModelReport): MetricView[] {
 }
 
 export function headlineMetric(report: ModelReport): MetricView | undefined {
+  const backtest = report.report.backtest;
+  if (backtest) {
+    return {
+      key: "total_return",
+      label: "Net getiri",
+      value: backtest.total_return,
+      quality: backtest.total_return > 0 ? "good" : "poor",
+    };
+  }
   return metricViews(report)[0];
 }
 
@@ -303,6 +353,7 @@ const percentFormat = new Intl.NumberFormat("tr-TR", { style: "percent", maximum
 
 /** Kenar çubuğu için kısa gösterim: "%84", "R² 0,72" */
 export function shortMetric(metric: MetricView): string {
+  if (metric.key === "total_return") return formatSignedPercent(metric.value);
   return metric.key === "accuracy" ? percentFormat.format(metric.value) : `${metric.label} ${formatNumber(metric.value)}`;
 }
 
