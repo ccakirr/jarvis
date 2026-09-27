@@ -219,14 +219,16 @@ const MODEL_LABELS: Record<string, string> = {
   decision_tree: "Decision Tree",
   hist_gradient_boosting: "Histogram Gradient Boosting",
   ridge: "Ridge Regression",
+  tfidf_logistic_regression: "TF-IDF + Logistic Regression",
 };
 
 export function modelLabel(modelName: string): string {
   return MODEL_LABELS[modelName] ?? modelName;
 }
 
-export function taskLabel(taskType: ModelReport["task_type"]): string {
-  return taskType === "classification" ? "Sınıflandırma" : "Regresyon";
+export function taskLabel(model: ModelReport): string {
+  if (model.report.text_column) return "Metin sınıflandırma (NLP)";
+  return model.task_type === "classification" ? "Sınıflandırma" : "Regresyon";
 }
 
 export type Quality = "good" | "fair" | "poor";

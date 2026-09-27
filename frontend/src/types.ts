@@ -42,6 +42,12 @@ export interface ModelReport {
     feature_columns: string[];
     test_size: number;
     random_state: number;
+    // Yalnızca NLP (train_text_classifier) modellerinde
+    text_column?: string;
+    rows_dropped_empty_text?: number;
+    vocabulary_size?: number;
+    class_distribution?: { label: unknown; count: number }[];
+    top_terms?: { label: unknown; terms: string[] }[];
   };
   model_download_url: string;
   report_download_url: string;

@@ -722,3 +722,55 @@
   background: rgba(248, 113, 113, 0.06);
   color: #fecaca;
 }
+
+/* NLP: sınıf başına belirleyici kelimeler.
+   Etiketin anlamı bilinmiyor; iyi/kötü çağrışımı yapmayan renkler */
+.inspector {
+  --class-0: var(--accent);
+  --class-1: var(--violet);
+  --class-2: var(--accent-2);
+  --class-3: #f472b6;
+  --class-4: #fbbf24;
+}
+
+.term-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.term-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-left: 12px;
+  border-left: 2px solid var(--tone);
+}
+
+.term-group__label {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.term-group__label code {
+  font-size: 11.5px;
+}
+
+.term-group__label strong {
+  color: var(--tone);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.term-chip {
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+  color: var(--text);
+  font-size: 11.5px;
+}
+
+.term-note {
+  margin-top: 12px;
+}

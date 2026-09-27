@@ -1,6 +1,9 @@
 import json
 import re
+import uuid
 from pathlib import Path
+
+import joblib
 
 from ..core.config import MODELS_DIR, METADATA_DIR
 
@@ -37,3 +40,26 @@ def load_model_metadata(model_id: str) -> dict:
     file_path = get_model_metadata_path(model_id)
 
     return json.loads(file_path.read_text(encoding="utf-8"))
+
+
+def save_model_artifacts(model, metadata: dict) -> dict:
+    """Modeli .joblib, raporu .json olarak kaydeder; indirme linkleriyle döner."""
+    model_id = uuid.uuid4().hex
+
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, MODELS_DIR / f"{model_id}.joblib")
+
+    result = {
+        "model_id": model_id,
+        **metadata,
+        "model_download_url": f"/api/models/{model_id}/download",
+        "report_download_url": f"/api/models/{model_id}/report/download",
+    }
+
+    (METADATA_DIR / f"{model_id}.json").write_text(
+        json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False),
+        encoding="utf-8",
+    )
+
+    return result

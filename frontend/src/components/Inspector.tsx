@@ -333,12 +333,13 @@ function ModelView({
   const metrics = metricViews(model);
   const matrix = confusionMatrix(model);
   const total = Math.max(1, report.rows_total);
+  const droppedEmptyText = report.rows_dropped_empty_text ?? 0;
 
   return (
     <div className="insp">
       <header className="insp-header">
         <span className="insp-header__kicker">
-          <BrainCircuit size={13} /> Model · {taskLabel(model.task_type)}
+          <BrainCircuit size={13} /> Model · {taskLabel(model)}
         </span>
         <h2 className="insp-header__title">{modelLabel(model.model_name)}</h2>
         <code className="insp-header__id">{model.model_id}</code>
@@ -367,6 +368,33 @@ function ModelView({
         ))}
       </div>
 
+      {report.top_terms && report.top_terms.length > 0 && (
+        <Section
+          title="Belirleyici kelimeler"
+          aside={report.vocabulary_size ? <span className="muted-note">{formatInteger(report.vocabulary_size)} terim</span> : undefined}
+        >
+          <div className="term-groups">
+            {report.top_terms.map((group, index) => (
+              <div key={String(group.label)} className="term-group" style={{ "--tone": `var(--class-${index % 5})` } as CSSProperties}>
+                <span className="term-group__label">
+                  <code>{report.target_column}</code> = <strong>{String(group.label)}</strong>
+                </span>
+                <div className="feature-chips">
+                  {group.terms.map((term) => (
+                    <code key={term} className="term-chip">
+                      {term}
+                    </code>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="muted-note term-note">
+            Metinler küçük harfe ve Türkçe karaktersiz yazıma normalize edilir (ör. “çalışmıyor” → “calismiyor”).
+          </p>
+        </Section>
+      )}
+
       {matrix && (
         <Section title="Confusion matrix">
           <ConfusionMatrix labels={matrix.labels} matrix={matrix.matrix} />
@@ -377,7 +405,10 @@ function ModelView({
         <div className="split-bar" role="img" aria-label={`${report.train_rows} eğitim, ${report.test_rows} test satırı`}>
           <span className="split-bar__train" style={{ "--ratio": report.train_rows / total } as CSSProperties} />
           <span className="split-bar__test" style={{ "--ratio": report.test_rows / total } as CSSProperties} />
-          <span className="split-bar__dropped" style={{ "--ratio": report.rows_dropped_missing_target / total } as CSSProperties} />
+          <span
+            className="split-bar__dropped"
+            style={{ "--ratio": (report.rows_dropped_missing_target + droppedEmptyText) / total } as CSSProperties}
+          />
         </div>
         <ul className="split-legend">
           <li>
@@ -389,6 +420,11 @@ function ModelView({
           <li>
             <i className="dot dot--dropped" /> {formatInteger(report.rows_dropped_missing_target)} hedefi eksik
           </li>
+          {droppedEmptyText > 0 && (
+            <li>
+              <i className="dot dot--dropped" /> {formatInteger(droppedEmptyText)} boş metin
+            </li>
+          )}
         </ul>
         <p className="muted-note">
           test_size {report.test_size} · random_state {report.random_state}
@@ -401,7 +437,7 @@ function ModelView({
           <code className="feature-chip feature-chip--target">{report.target_column}</code>
         </div>
         <div className="feature-block">
-          <span className="feature-block__label">Özellikler</span>
+          <span className="feature-block__label">{report.text_column ? "Metin sütunu" : "Özellikler"}</span>
           <div className="feature-chips">
             {report.feature_columns.map((column) => (
               <code key={column} className="feature-chip">
