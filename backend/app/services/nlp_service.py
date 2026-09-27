@@ -15,10 +15,6 @@ MAX_CLASSES = 50
 MAX_FEATURES = 50_000
 TOP_TERM_COUNT = 12
 
-# Türkçe'ye duyarlı küçük harf + ASCII katlama:
-# "ÇALIŞMIYOR", "çalışmıyor" ve "calismiyor" aynı terime iner.
-# str.translate + methodcaller saf pickle ile saklanır; indirilen model
-# Jarvis kodu olmadan, yalnızca scikit-learn ile yüklenebilir.
 TURKISH_FOLD = str.maketrans(
     string.ascii_uppercase + "İıÇçĞğÖöŞşÜü",
     string.ascii_lowercase + "iiccggoossuu",
@@ -116,8 +112,6 @@ def top_terms_by_class(pipeline: Pipeline) -> list[dict]:
     labels = model.classes_.tolist()
     coefficients = model.coef_
 
-    # İkili sınıflamada tek katsayı vektörü var: pozitif ağırlık 2. sınıfı,
-    # negatif ağırlık 1. sınıfı işaret eder
     if coefficients.shape[0] == 1:
         order = np.argsort(coefficients[0])
         return [
