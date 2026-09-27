@@ -1,0 +1,234 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 18px 12px 12px;
+}
+
+.side-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  padding: 0 6px 8px 10px;
+}
+
+.side-section__header h2,
+.insp-section__header h3 {
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- Dataset ağacı ---------- */
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree .tree {
+  margin-top: 2px;
+}
+
+.tree-item,
+.model-item {
+  --depth: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px 7px calc(10px + var(--depth) * 24px);
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.tree-item:hover,
+.model-item:hover {
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.tree-item.is-selected,
+.model-item.is-selected {
+  border-color: var(--line-2);
+  background: var(--panel-2);
+}
+
+.tree-item.is-selected::before,
+.model-item.is-selected::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* Türetilmiş veri setini kaynağına bağlayan çizgi */
+.tree .tree .tree-item::after {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: calc(var(--depth) * 24px);
+  width: 10px;
+  height: calc(50% + 15px);
+  border-bottom: 1px solid var(--line-2);
+  border-left: 1px solid var(--line-2);
+  border-bottom-left-radius: 8px;
+  pointer-events: none;
+}
+
+.tree-item__icon,
+.model-item__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text-2);
+}
+
+.tree-item.is-active .tree-item__icon {
+  border-color: rgba(92, 225, 230, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.model-item__icon {
+  border-color: rgba(167, 139, 250, 0.25);
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+
+.tree-item__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tree-item__title,
+.tree-item__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-item__title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tree-item__meta {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.dropzone-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.dropzone-hint:hover:not(:disabled) {
+  border-color: var(--accent-line);
+  background: rgba(92, 225, 230, 0.04);
+  color: var(--accent);
+}
+
+/* ---------- Modeller ---------- */
+
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metric-pill {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--panel-3);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.metric-pill.is-good {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--good);
+}
+
+.metric-pill.is-fair {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--fair);
+}
+
+.metric-pill.is-poor {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--poor);
+}
+
+.side-empty {
+  padding: 2px 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.side-empty em {
+  color: var(--text-2);
+  font-style: normal;
+}
+
+.side-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 12px 4px 0 10px;
+  border-top: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.side-footer code {
+  color: var(--text-2);
+  font-size: 11.5px;
+}
