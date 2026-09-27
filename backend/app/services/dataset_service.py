@@ -14,7 +14,6 @@ DATASETS = {
 
 
 def load_dataset(dataset_id: str) -> pd.DataFrame:
-    """Load a registered CSV dataset by its identifier."""
     if dataset_id in DATASETS:
         file_path = DATASETS[dataset_id]
     else:
@@ -38,7 +37,6 @@ def load_dataset(dataset_id: str) -> pd.DataFrame:
 
 
 def summarize_dataset(df: pd.DataFrame) -> dict:
-    """Return a JSON-compatible summary without modifying the dataframe."""
     preview = json.loads(
         df.head(5).to_json(
             orient="records",

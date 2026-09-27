@@ -90,9 +90,6 @@ def aggregate_operations(
     group_by: str,
     operations: list[dict],
 ) -> list[dict]:
-    """
-        Apply the requested aggregations without changing data or the catalog.
-    """
     return [
         aggregate_dataset(df, group_by, item["column"], item["operation"])
         for item in operations

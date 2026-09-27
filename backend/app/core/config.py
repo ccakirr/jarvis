@@ -13,3 +13,5 @@ LLM_API_BASE = os.getenv("LLM_API_BASE") or None
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
 STORAGE_DIR = Path(__file__).resolve().parents[2] / "storage" / "datasets"
+MODELS_DIR = Path(__file__).resolve().parents[2] / "storage" / "models"
+METADATA_DIR = MODELS_DIR / "metadata"

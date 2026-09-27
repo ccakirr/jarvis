@@ -43,7 +43,14 @@ class TransformDatasetTool(Tool):
                 " and a constant 'value' "
                 "(string or number). Use only the fill value"
                 " requested or agreed "
-                "by the user. Only the final dataset is saved."
+                "by the user. Only the final dataset is saved. "
+                "'derive_column' requires 'output_column' and 'expression'. "
+                "The output column must be new. "
+                "An expression contains 'operator', 'left', and 'right'. "
+                "Supported operators are 'add', 'subtract', and 'multiply'. "
+                "Each operand must be either "
+                "{'column': 'existing_numeric_column'} "
+                "or {'value': number}. Nested expressions are not supported. "
             ),
         },
     }
