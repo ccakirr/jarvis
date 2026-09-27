@@ -36,6 +36,7 @@ class JarvisVoiceAgent(Agent):
         super().__init__(instructions="")
         self._backend_session_id = backend_session_id
         self._pending_reply: asyncio.Task | None = None
+        self._queued: list[str] = []
 
     async def on_user_turn_completed(self, turn_ctx, new_message) -> None:
         text = (new_message.text_content or "").strip()
@@ -46,34 +47,43 @@ class JarvisVoiceAgent(Agent):
         await _publish_chat("user", text)
 
         if self._pending_reply and not self._pending_reply.done():
-            self.session.say("Hâlâ önceki isteğin üzerinde çalışıyorum, biraz bekle.")
-            await _publish_chat("notice", "Önceki istek sürüyordu; bu mesaj işlenmedi.")
+            self._queued.append(text)
+            self.session.say("Not aldım, bitince ona da bakacağım.")
+            await _publish_chat("notice", "Önceki istek sürüyor; bu mesaj sıraya alındı.")
             return
 
-        self.session.say("Bakıyorum.")
+        await self._begin(text)
+
+    async def _begin(self, text: str, announce: bool = True) -> None:
+        if announce:
+            self.session.say("Bakıyorum.")
         await _set_busy(True)
         self._pending_reply = asyncio.create_task(self._reply(text))
 
     async def _reply(self, text: str) -> None:
+        answer = None
         try:
             answer = await backend_client.send_message(self._backend_session_id, text)
         except BackendError as exc:
             logger.error("Backend hatası: %s", exc)
             self.session.say("Şu anda isteğini işleyemedim, lütfen tekrar dene.")
             await _publish_chat("error", f"İstek işlenemedi: {exc}")
-            return
         except Exception:
             logger.exception("Beklenmeyen hata")
             self.session.say("Beklenmeyen bir hata oluştu.")
             await _publish_chat("error", "Beklenmeyen bir hata oluştu.")
-            return
         finally:
             await _set_busy(False)
 
-        logger.info("JARVIS: %s", answer)
-        # Kullanıcı araya girip sesi kesse bile cevabın tamamı ekranda kalır
-        await _publish_chat("assistant", answer)
-        self.session.say(answer)
+        if answer is not None:
+            logger.info("JARVIS: %s", answer)
+            await _publish_chat("assistant", answer)
+            self.session.say(answer)
+
+        if self._queued:
+            follow_up = " ".join(self._queued)
+            self._queued.clear()
+            await self._begin(follow_up, announce=False)
 
 
 async def _set_busy(busy: bool) -> None:
@@ -116,6 +126,7 @@ async def entrypoint(ctx: agents.JobContext):
         vad=silero.VAD.load(),
         stt="deepgram/nova-3:tr",
         tts="cartesia/sonic-3",
+        turn_handling={"endpointing": {"min_delay": 0.8, "max_delay": 4.0}},
     )
 
     @session.on("user_input_transcribed")
