@@ -1,0 +1,177 @@
+/* Dataset görünümü sekmeleri */
+.insp-tabs {
+  display: flex;
+  gap: 3px;
+  width: fit-content;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.insp-tab {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.insp-tab:hover {
+  color: var(--text);
+}
+
+.insp-tab.is-active {
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+.insp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insp-panel[hidden] {
+  display: none;
+}
+
+/* Analiz oluşturucu */
+.analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.analysis-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-field__label {
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.select {
+  min-width: 0;
+  height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  background: var(--panel)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7889' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.select option {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.analysis-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analysis-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.analysis-add {
+  width: fit-content;
+  padding-left: 4px;
+}
+
+.analysis-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analysis-result {
+  display: flex;
+  flex-direction: column;
+  animation: fade-up 0.25s ease both;
+}
+
+.analysis-result .data-table th.is-number {
+  text-align: right;
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  color: var(--text);
+}
+
+.sort-btn__label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.sort-btn__label > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sort-btn__column {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* Hücre içi büyüklük çubuğu: tek seri, dataviz 1. slot rengi */
+.cell-bar {
+  display: block;
+  width: calc(var(--ratio) * 100%);
+  min-width: 2px;
+  height: 3px;
+  margin: 4px 0 0 auto;
+  border-radius: 2px;
+  background: #3987e5;
+}

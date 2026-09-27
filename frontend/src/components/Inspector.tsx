@@ -11,9 +11,11 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
+import { AnalysisBuilder } from "./AnalysisBuilder";
 import { EquityChart } from "./EquityChart";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 import {
   COLUMN_KIND_LABELS,
@@ -50,6 +52,7 @@ interface InspectorProps {
   onSelect: (selection: Selection) => void;
   onActivate: (datasetId: string) => void;
   onUpload: () => void;
+  onAsk: (text: string) => void;
   ensureDataset: (datasetId: string) => void;
   ensureModel: (modelId: string) => void;
 }
@@ -71,7 +74,7 @@ export function Inspector(props: InspectorProps) {
       <button type="button" className="icon-btn inspector__close" onClick={onClose} aria-label="Detayları kapat">
         <X size={18} />
       </button>
-      {content}
+      <ErrorBoundary key={selection ? `${selection.kind}:${selection.id}` : "empty"}>{content}</ErrorBoundary>
     </aside>
   );
 }
@@ -139,9 +142,11 @@ function DatasetView({
   activating,
   onActivate,
   onSelect,
+  onAsk,
   ensureDataset,
 }: InspectorProps & { datasetId: string }) {
   useEffect(() => ensureDataset(datasetId), [datasetId, ensureDataset]);
+  const [tab, setTab] = useState<"overview" | "analysis">("overview");
 
   const entry = datasets[datasetId];
   const record = findDataset(session, datasetId);
@@ -186,7 +191,27 @@ function DatasetView({
         )}
       </header>
 
-      {entry?.status !== "ready" ? <LoadState entry={entry} /> : <DatasetBody summary={entry.data} operations={record?.operations ?? []} />}
+      <div className="insp-tabs" role="tablist" aria-label="Veri seti görünümü">
+        <button type="button" role="tab" aria-selected={tab === "overview"} className={cx("insp-tab", tab === "overview" && "is-active")} onClick={() => setTab("overview")}>
+          Özet
+        </button>
+        <button type="button" role="tab" aria-selected={tab === "analysis"} className={cx("insp-tab", tab === "analysis" && "is-active")} onClick={() => setTab("analysis")}>
+          Analiz
+        </button>
+      </div>
+
+      {entry?.status !== "ready" ? (
+        <LoadState entry={entry} />
+      ) : (
+        <>
+          <div className="insp-panel" role="tabpanel" hidden={tab !== "overview"}>
+            <DatasetBody summary={entry.data} operations={record?.operations ?? []} />
+          </div>
+          <div className="insp-panel" role="tabpanel" hidden={tab !== "analysis"}>
+            <AnalysisBuilder datasetId={datasetId} summary={entry.data} onAsk={onAsk} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

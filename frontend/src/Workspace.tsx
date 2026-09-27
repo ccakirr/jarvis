@@ -233,6 +233,14 @@ export function Workspace({ sessionId, onNewSession }: WorkspaceProps) {
           onSelect={select}
           onActivate={(datasetId) => void handleActivate(datasetId)}
           onUpload={openFilePicker}
+          onAsk={(text) => {
+            if (blockedReason) {
+              setNotice({ tone: "error", text: blockedReason });
+              return;
+            }
+            setDrawer(null);
+            void handleSend(text);
+          }}
           ensureDataset={data.ensureDataset}
           ensureModel={data.ensureModel}
         />

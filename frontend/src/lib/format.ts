@@ -231,6 +231,25 @@ export function buildDatasetTree(session: Session | null): DatasetNode[] {
   return roots;
 }
 
+// ---------- Analiz işlemleri ----------
+
+const AGGREGATION_LABELS: Record<string, string> = {
+  mean: "Ortalama",
+  sum: "Toplam",
+  count: "Sayım",
+  median: "Medyan",
+  min: "En küçük",
+  max: "En büyük",
+  std: "Std. sapma",
+  var: "Varyans",
+  nunique: "Benzersiz",
+};
+
+/** Kataloğa yeni eklenen işlem etiket olmadan da ham adıyla görünür */
+export function aggregationLabel(operation: string): string {
+  return AGGREGATION_LABELS[operation] ?? operation;
+}
+
 // ---------- Sütun tipleri ----------
 
 export type ColumnKind = "number" | "text" | "bool" | "date";

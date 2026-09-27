@@ -96,6 +96,27 @@ export interface VoiceToken {
   participant_token: string;
 }
 
+export interface OperationInfo {
+  name: string;
+  default: boolean;
+  requires_numeric: boolean;
+}
+
+export interface OperationCatalog {
+  defaults: string[];
+  available: OperationInfo[];
+}
+
+export interface AggregationSpec {
+  column: string;
+  operation: string;
+}
+
+export interface Aggregation extends AggregationSpec {
+  group_by: string;
+  results: { group: unknown; value: number | null }[];
+}
+
 export type Loadable<T> =
   | { status: "loading" }
   | { status: "ready"; data: T }

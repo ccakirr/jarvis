@@ -6,6 +6,7 @@ import "./styles/orb.css";
 import "./styles/sidebar.css";
 import "./styles/conversation.css";
 import "./styles/inspector.css";
+import "./styles/analysis.css";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

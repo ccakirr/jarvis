@@ -1,6 +1,9 @@
 import type {
+  Aggregation,
+  AggregationSpec,
   DatasetSummary,
   ModelReport,
+  OperationCatalog,
   Session,
   UploadResult,
   VoiceToken,
@@ -80,6 +83,14 @@ export const api = {
     request<{ dataset_id: string; summary: DatasetSummary }>(`/datasets/${datasetId}`),
 
   getModel: (modelId: string) => request<ModelReport>(`/models/${modelId}`),
+
+  operationCatalog: () => request<OperationCatalog>("/analysis/operations"),
+
+  aggregate: (datasetId: string, groupBy: string, operations: AggregationSpec[]) =>
+    request<{ dataset_id: string; analyses: Aggregation[] }>(
+      "/analysis/aggregate",
+      jsonBody("POST", { dataset_id: datasetId, group_by: groupBy, operations }),
+    ),
 
   voiceToken: (sessionId: string) =>
     request<VoiceToken>(`/sessions/${sessionId}/voice-token`, { method: "POST" }),
