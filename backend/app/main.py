@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
+from .core.config import FRONTEND_DIST_DIR
 from .api.analysis import router as analysis_router
 from .api.health import router as health_router
 from .api.datasets import router as datasets_router
@@ -43,3 +45,10 @@ app.include_router(
     voice_router,
     prefix="/api"
 )
+
+if FRONTEND_DIST_DIR.is_dir():
+    app.mount(
+        "/",
+        StaticFiles(directory=FRONTEND_DIST_DIR, html=True),
+        name="frontend"
+    )
